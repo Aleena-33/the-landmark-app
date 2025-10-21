@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landmark App</title>
+<style>
+:root {
+  --dark-green: #154d1e;
+  --darker-green: #0f3a18;
+  --medium-green: #407d3d;
+  --light-green: #cce8bb;
+  --white: #ffffff;
+  --soft-white: #f8f8f8;
+  --footer-gray: #222;
+  --footer-light: #ddd;
+  --overlay-bg: rgba(0, 0, 0, 0.8);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: var(--soft-white);
+  color: var(--dark-green);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+body.splash-lock {
+  overflow: hidden;
+}
+
+/* SPLASH SCREEN - Centered logo, dark green background, NO TEXT, full screen */
+#frontPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #154d1e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease-out;
+  padding: 0;
+  margin: 0;
+}
+
+#frontPage img {
+  max-width: 60vw;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  margin: 0;
+  animation: fadeInScale 1s ease-out;
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* HEADER - language selector + profile icon */
+header {
+  background: var(--dark-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  position: relative;
+  z-index: 100;
+}
+
+header img.logo { height: 40px; }
+
+.app-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: white;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: auto;
+}
+
+.language-selector {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.3s;
+}
+.language-selector:hover { background: rgba(255,255,255,0.3); }
+
+.profile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--medium-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+.profile-icon:hover { transform: scale(1.1); }
+.profile-icon-text { color: white; font-weight: bold; font-size: 1.2em; }
+
+/* PROFILE POPUP */
+.profile-popup {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  padding: 20px;
+  min-width: 250px;
+  z-index: 200;
+  display: none;
+  animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.profile-popup.active { display: block; }
+.profile-popup-header {
+  display: flex; align-items: center; gap: 15px;
+  padding-bottom: 15px; border-bottom: 1px solid #eee;
+}
+.profile-popup-avatar {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--medium-green); display: flex; align-items: center;
+  justify-content: center; color: white; font-weight: bold; font-size: 1.5em;
+}
+.profile-popup-info h4 { color: var(--dark-green); margin-bottom: 5px; }
+.profile-popup-info p { color: #666; font-size: 0.9em; }
+.profile-popup-menu { margin-top: 15px; }
+.profile-popup-menu a {
+  display: block; padding: 10px 0; color: var(--dark-green);
+  text-decoration: none; transition: color 0.3s; border-bottom: 1px solid #eee;
+}
+.profile-popup-menu a:last-child { border-bottom: none; }
+.profile-popup-menu a:hover { color: var(--medium-green); }
+
+/* HAMBURGER MENU */
+.hamburger { display: flex; flex-direction: column; cursor: pointer; padding: 5px; z-index: 200; }
+.hamburger span {
+  width: 25px; height: 3px; background: white; margin: 3px 0; transition: 0.3s; border-radius: 2px;
+}
+.hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+
+/* MENU OVERLAY */
+.menu-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: var(--overlay-bg); display: none; justify-content: center; align-items: center;
+  z-index: 150; animation: fadeIn 0.3s ease-out;
+}
+.menu-overlay.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.menu-content {
+  background: white; padding: 40px; border-radius: 15px; text-align: center; min-width: 300px;
+  animation: slideInUp 0.3s ease-out;
+}
+@keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+.menu-content a {
+  display: block; color: var(--dark-green); text-decoration: none; font-size: 1.2em; font-weight: bold;
+  padding: 15px 0; border-bottom: 1px solid #eee; transition: color 0.3s;
+}
+.menu-content a:hover { color: var(--medium-green); }
+.menu-content a:last-child { border-bottom: none; }
+
+/* SCREENS */
+.screen {
+  display: none; width: 100%; max-width: 1200px; margin: auto; padding: 20px; text-align: center;
+  min-height: calc(100vh - 80px);
+}
+
+/* HOME PAGE - slideshow + larger centered buttons */
+#home {
+  position: relative; min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start;
+  align-items: center; text-align: center; padding: 0; margin: 0; width: 100vw; max-width: none; overflow-x: hidden; overflow-y: auto;
+}
+
+/* Slideshow container */
+#homepage-slideshow {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0;
+}
+#homepage-slideshow .slide {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  opacity: 0; transition: opacity 600ms ease-in-out;
+}
+#homepage-slideshow .slide.active { opacity: 1; }
+
+#home::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4); z-index: 1; pointer-events: none;
+}
+
+#home .hero-content {
+  position: relative; z-index: 2; color: white; padding: 80px 20px 60px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+}
+
+#home h2 { font-size: 3em; margin-bottom: 60px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+/* CTA buttons */
+#home .home-buttons {
+  display: flex; flex-direction: row; gap: 30px; align-items: center; justify-content: center;
+  width: 100%; max-width: 1000px; padding: 0 20px;
+}
+.cta-col { flex: 1; max-width: 450px; }
+.cta-col button { width: 100%; height: 100%; min-height: 180px; font-size: 1.8em; padding: 40px 30px; font-weight: bold; }
+
+/* ABOUT US SECTION - in scrolling page */
+.about-us-section {
+  position: relative; z-index: 2; background: rgba(21, 77, 30, 0.95); color: white; padding: 60px 40px;
+  margin: 0 auto 0; max-width: 800px; border-radius: 15px; box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  width: calc(100% - 40px); margin-top: -100px;
+}
+.about-us-section h3 { font-size: 2em; margin-bottom: 20px; }
+.about-us-section p { font-size: 1.1em; line-height: 1.8; }
+
+/* Buttons base */
+button {
+  background: var(--medium-green); border: none; color: var(--white); padding: 15px 30px; border-radius: 10px;
+  font-size: 1.2em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; min-width: 250px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;
+}
+button:hover { background: var(--darker-green); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+button:active { transform: translateY(0); }
+button.back-btn {
+  background: var(--dark-green); color: white; padding: 8px 15px; font-size: 1em; border-radius: 6px;
+  min-width: auto; margin-bottom: 20px; align-self: flex-start;
+}
+
+/* Cities */
+#cities { background: var(--soft-white); padding: 40px 20px; }
+#cities h2 { color: var(--dark-green); margin-bottom: 30px; font-size: 2.5em; }
+.cities-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto;
+}
+.city-card {
+  background: var(--light-green); background-size: cover; background-position: center; border-radius: 15px; padding: 30px 20px;
+  cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; position: relative; min-height: 150px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.city-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(21, 77, 30, 0.4);
+  border-radius: 15px; transition: background 0.3s ease;
+}
+.city-card:hover::before { background: rgba(15, 58, 24, 0.7); }
+.city-card h3, .city-card p { position: relative; z-index: 1; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
+.city-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.city-card h3 { font-size: 1.3em; margin-bottom: 10px; }
+.city-card p { font-size: 0.9em; }
+
+/* Contact */
+#contact { background: var(--soft-white); padding: 40px 20px; }
+#contact h2 { color: var(--dark-green); margin-bottom: 30px; font-size: 2.5em; }
+.social-links { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 40px; }
+.social-link {
+  display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--dark-green);
+  transition: all 0.3s ease; padding: 20px; border-radius: 15px; background: var(--light-green); min-width: 120px;
+}
+.social-link:hover { background: var(--medium-green); color: white; transform: translateY(-5px); }
+.social-link img { width: 48px; height: 48px; margin-bottom: 10px; object-fit: contain; }
+.social-link span { font-weight: bold; }
+
+/* BHK selection */
+#bhkSelection { background: var(--soft-white); padding: 40px 20px; }
+#bhkSelection h2 { color: var(--dark-green); margin-bottom: 30px; font-size: 2.5em; }
+.bhk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; max-width: 800px; margin: 30px auto; }
+.bhk-card {
+  background: var(--light-green); border-radius: 15px; padding: 40px 20px; cursor: pointer; transition: all 0.3s ease; border: 3px solid transparent;
+}
+.bhk-card:hover { background: var(--medium-green); color: white; transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+.bhk-card h3 { font-size: 1.5em; margin-bottom: 10px; }
+.bhk-card p { font-size: 0.9em; }
+
+/* Property cards */
+.property-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 30px;
+}
+.property-card {
+  background: var(--light-green); border-radius: 15px; overflow: hidden; text-align: left; transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative;
+}
+.property-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+.property-card img { width: 100%; height: 180px; object-fit: cover; }
+.property-card .info { padding: 20px; }
+.property-card .actions { display: flex; justify-content: space-around; margin: 15px 0; gap: 10px; }
+.property-card .actions button { min-width: auto; padding: 10px 15px; font-size: 0.9em; }
+.sold-out-label {
+  position: absolute; top: 10px; right: 10px; background: #d32f2f; color: white; padding: 8px 15px; border-radius: 5px; font-weight: bold; font-size: 0.9em;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* Pagination */
+.pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+.pagination button { min-width: auto; padding: 10px 15px; font-size: 1em; }
+
+/* Property details */
+#propertyDetails { background: var(--soft-white); padding: 40px 20px; text-align: left; }
+.property-details-container {
+  max-width: 900px; margin: 0 auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.property-details-container h2 { color: var(--dark-green); margin-bottom: 20px; }
+.property-details-image { width: 100%; height: 400px; object-fit: cover; border-radius: 10px; margin-bottom: 20px; }
+.property-info-section { margin-bottom: 20px; }
+.property-info-section h3 { color: var(--dark-green); margin-bottom: 10px; font-size: 1.3em; }
+.property-info-section p { font-size: 1.1em; line-height: 1.8; color: #333; }
+.nearby-places { background: var(--light-green); padding: 15px; border-radius: 10px; margin-top: 10px; }
+.nearby-places ul { list-style: none; padding-left: 0; }
+.nearby-places li { padding: 8px 0; border-bottom: 1px solid rgba(21,77,30,0.2); }
+.nearby-places li:last-child { border-bottom: none; }
+
+/* My Ads & Cart */
+#myAds, #myCart { background: var(--soft-white); padding: 40px 20px; }
+#myAds h2, #myCart h2 { color: var(--dark-green); margin-bottom: 30px; font-size: 2.5em; }
+.empty-state { text-align: center; padding: 60px 20px; color: #666; }
+.empty-state h3 { font-size: 1.5em; margin-bottom: 10px; }
+
+/* Forms */
+form { max-width: 500px; margin: 0 auto; text-align: left; }
+form input, form select, form textarea {
+  width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 2px solid var(--medium-green); font-size: 1em; transition: border-color 0.3s;
+}
+form input:focus, form select:focus, form textarea:focus { outline: none; border-color: var(--dark-green); }
+form button { width: 100%; margin-top: 20px; }
+
+/* Profile */
+#profile { background: var(--soft-white); padding: 40px 20px; }
+#profile h2 { color: var(--dark-green); margin-bottom: 30px; font-size: 2.5em; }
+.profile-view-box {
+  max-width: 600px; margin: 30px auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.profile-view-box h3 { color: var(--dark-green); margin-bottom: 20px; font-size: 1.8em; }
+.profile-info-item { background: var(--light-green); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+.profile-info-item strong { color: var(--dark-green); display: block; margin-bottom: 5px; }
+.profile-edit-btn { width: 100%; margin-top: 20px; }
+#profileStepA, #profileStepB { max-width: 500px; margin: 0 auto; }
+
+/* Footer */
+footer { background: var(--footer-gray); color: var(--footer-light); padding: 30px 20px; text-align: center; margin-top: auto; font-size: 0.9em; }
+footer a { color: var(--footer-light); text-decoration: none; margin: 0 8px; transition: color 0.3s; }
+footer a:hover { color: var(--medium-green); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  header { padding: 10px 15px; }
+  .app-title { font-size: 1.4em; }
+  #home h2 { font-size: 2.2em; }
+  #home .home-buttons { flex-direction: column; }
+  .cta-col button { min-height: 140px; font-size: 1.5em; }
+  button { min-width: 200px; padding: 12px 25px; font-size: 1.1em; }
+  .cities-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+  .social-links { gap: 20px; }
+  .social-link { min-width: 100px; padding: 15px; }
+  .property-grid { grid-template-columns: 1fr; }
+  .menu-content { margin: 20px; padding: 30px 20px; }
+  .about-us-section { padding: 40px 20px; margin-top: 0; }
+  .language-selector { font-size: 0.8em; padding: 5px 8px; }
+  .profile-icon { width: 32px; height: 32px; }
+}
+@media (max-width: 480px) {
+  #frontPage img { max-width: 70vw; max-height: 50vh; }
+  #home h2 { font-size: 1.8em; }
+  button { min-width: 180px; padding: 10px 20px; font-size: 1em; }
+  .cities-grid { grid-template-columns: 1fr; }
+  .social-links { flex-direction: column; align-items: center; }
+}
+
+/* Ripple & spinner */
+.ripple {
+  position: absolute; border-radius: 50%; background: rgba(255,255,255,0.6); transform: scale(0);
+  animation: ripple-animation 0.6s linear; pointer-events: none;
+}
+@keyframes ripple-animation { to { transform: scale(4); opacity: 0; } }
+
+.loading-spinner {
+  border: 4px solid var(--light-green); border-top: 4px solid var(--dark-green);
+  border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 40px auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- SPLASH (fills entire screen; no text) -->
+<div class="screen" id="frontPage">
+  <img src="landmark_logo.png" alt="Landmark Logo">
+</div>
+
+<!-- HEADER -->
+<header id="mainHeader" style="display:none;">
+  <img src="logo.png" alt="Logo" class="logo">
+  <div class="app-title">LandMark</div>
+  <div class="header-right">
+    <select class="language-selector" id="languageSelector">
+      <option value="en">English</option>
+      <option value="ml">Malayalam</option>
+      <option value="hi">Hindi</option>
+      <option value="ta">Tamil</option>
+    </select>
+    <div class="profile-icon" onclick="toggleProfilePopup()">
+      <span class="profile-icon-text" id="profileIconText">U</span>
+    </div>
+    <div class="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</header>
+
+<!-- PROFILE POPUP -->
+<div class="profile-popup" id="profilePopup">
+  <div class="profile-popup-header">
+    <div class="profile-popup-avatar" id="profilePopupAvatar">U</div>
+    <div class="profile-popup-info">
+      <h4 id="profilePopupName">User</h4>
+      <p id="profilePopupEmail">user@example.com</p>
+    </div>
+  </div>
+  <div class="profile-popup-menu">
+    <a href="#" onclick="closeProfilePopupAndShow('profile')">View Profile</a>
+    <a href="#" onclick="closeProfilePopupAndShow('myAds')">My ADS</a>
+    <a href="#" onclick="closeProfilePopupAndShow('myCart')">My Cart</a>
+    <a href="#" onclick="closeProfilePopupAndShow('home')">Logout</a>
+  </div>
+</div>
+
+<!-- MENU OVERLAY -->
+<div class="menu-overlay" id="menuOverlay">
+  <div class="menu-content">
+    <a href="#" onclick="closeMenuAndShow('home')">Home</a>
+    <a href="#" onclick="closeMenuAndShow('about')">About</a>
+    <a href="#" onclick="closeMenuAndShow('cities')">Cities</a>
+    <a href="#" onclick="closeMenuAndShow('contact')">Contact</a>
+    <a href="#" onclick="closeMenuAndShow('support')">Support</a>
+    <a href="#" onclick="closeMenuAndShow('profile')">Profile</a>
+    <a href="#" onclick="closeMenuAndShow('myAds')">My ADS</a>
+    <a href="#" onclick="closeMenuAndShow('myCart')">My Cart</a>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="home">
+  <div id="homepage-slideshow">
+    <div class="slide active" style="background-image: url('landmark_background1.png');"></div>
+    <div class="slide" style="background-image: url('landmark_background2.png');"></div>
+    <div class="slide" style="background-image: url('landmark_background3.png');"></div>
+    <div class="slide" style="background-image: url('landmark_background4.png');"></div>
+    <div class="slide" style="background-image: url('landmark_background5.png');"></div>
+  </div>
+
+  <div class="hero-content">
+    <h2 id="homepageTitle">LandMark</h2>
+    <div class="home-buttons">
+      <div class="cta-col">
+        <button onclick="showScreen('buyer')">I want to Purchase</button>
+      </div>
+      <div class="cta-col">
+        <button onclick="showScreen('seller')">I want to Sell</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-us-section">
+    <h3>About Us</h3>
+    <p>We help people buy and sell properties across Kerala. Trusted, transparent, and simple real estate solutions. With years of experience in the real estate market, we provide comprehensive services to both buyers and sellers, ensuring the best deals and smooth transactions.</p>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="screen" id="about">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>About Us</h2>
+  <p>We are the LandMark team. We help people buy or sell properties, lands, houses, or shops across Kerala. Our mission is to make property transactions simple, transparent, and secure for everyone.</p>
+  <p>Whether you're looking to buy your dream home or sell your property for the best price, LandMark is your trusted partner in real estate.</p>
+</div>
+
+<!-- CITIES -->
+<div class="screen" id="cities">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Our Cities</h2>
+  <div class="cities-grid">
+    <div class="city-card" onclick="alert('Thiruvananthapuram - Capital City')" style="background-image: url('thiruvananthapuram.png');">
+      <h3>Thiruvananthapuram</h3><p>Capital City</p>
+    </div>
+    <div class="city-card" onclick="alert('Kochi - Commercial Hub')" style="background-image: url('kochi.png');">
+      <h3>Kochi</h3><p>Commercial Hub</p>
+    </div>
+    <div class="city-card" onclick="alert('Kozhikode - Cultural Center')" style="background-image: url('Kozhikode.png');">
+      <h3>Kozhikode</h3><p>Cultural Center</p>
+    </div>
+    <div class="city-card" onclick="alert('Thrissur - Cultural Capital')" style="background-image: url('thrissur.png');">
+      <h3>Thrissur</h3><p>Cultural Capital</p>
+    </div>
+    <div class="city-card" onclick="alert('Kollam - Port City')" style="background-image: url('kollam.png');">
+      <h3>Kollam</h3><p>Port City</p>
+    </div>
+    <div class="city-card" onclick="alert('Palakkad - Gateway City')" style="background-image: url('palakkad.png');">
+      <h3>Palakkad</h3><p>Gateway City</p>
+    </div>
+    <div class="city-card" onclick="alert('Malappuram - Educational Hub')" style="background-image: url('malappuram.png');">
+      <h3>Malappuram</h3><p>Educational Hub</p>
+    </div>
+    <div class="city-card" onclick="alert('Kannur - Handloom City')" style="background-image: url('kannur.png');">
+      <h3>Kannur</h3><p>Handloom City</p>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="screen" id="contact">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Contact Us</h2>
+  <p>Get in touch with us through our social media channels</p>
+  <div class="social-links">
+    <a href="https://linkedin.com" class="social-link" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn"><span>LinkedIn</span>
+    </a>
+    <a href="https://instagram.com" class="social-link" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram"><span>Instagram</span>
+    </a>
+    <a href="https://facebook.com" class="social-link" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook"><span>Facebook</span>
+    </a>
+    <a href="https://twitter.com" class="social-link" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter"><span>Twitter</span>
+    </a>
+    <a href="https://youtube.com" class="social-link" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/174/174883.png" alt="YouTube"><span>YouTube</span>
+    </a>
+    <a href="mailto:info@landmark.com" class="social-link">
+      <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email"><span>Email</span>
+    </a>
+  </div>
+</div>
+
+<!-- BUYER -->
+<div class="screen" id="buyer">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Search Properties</h2>
+  <form>
+    <select id="propertySearchType">
+      <option value="">Select Property Type</option>
+      <option value="house">House</option>
+      <option value="shop">Shop</option>
+      <option value="land">Land</option>
+      <option value="property">Property</option>
+    </select>
+    <input type="text" id="searchLocation" placeholder="Enter Location">
+    <button type="button" onclick="handleSearch()">Search</button>
+  </form>
+</div>
+
+<!-- BHK SELECTION -->
+<div class="screen" id="bhkSelection">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Select BHK Type</h2>
+  <p>Choose the type of house you're looking for in <span id="bhkLocationName"></span></p>
+  <div class="bhk-grid">
+    <div class="bhk-card" onclick="searchWithBHK('1BHK')"><h3>1 BHK</h3><p>Single Bedroom</p></div>
+    <div class="bhk-card" onclick="searchWithBHK('2BHK')"><h3>2 BHK</h3><p>Two Bedrooms</p></div>
+    <div class="bhk-card" onclick="searchWithBHK('3BHK')"><h3>3 BHK</h3><p>Three Bedrooms</p></div>
+    <div class="bhk-card" onclick="searchWithBHK('4BHK')"><h3>4 BHK</h3><p>Four Bedrooms</p></div>
+    <div class="bhk-card" onclick="searchWithBHK('5BHK+')"><h3>5+ BHK</h3><p>Five or More</p></div>
+    <div class="bhk-card" onclick="searchWithBHK('Any')"><h3>Any</h3><p>Show All</p></div>
+  </div>
+</div>
+<!-- SELLER -->
+<div class="screen" id="seller">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Seller Signup</h2>
+  <form id="sellerForm" onsubmit="event.preventDefault(); showReview();">
+    <input type="text" id="sellerName" placeholder="Full Name" required>
+    <input type="email" id="sellerEmail" placeholder="Email ID" required>
+    <input type="tel" id="sellerPhone" placeholder="Phone Number" required>
+    <select id="propertyTypeSell" required>
+      <option value="">Property Type</option>
+      <option value="house">House</option>
+      <option value="shop">Shop</option>
+      <option value="land">Land</option>
+      <option value="property">Property</option>
+    </select>
+    <input type="text" id="propertyLocation" placeholder="Location" required>
+    <input type="text" id="propertyPrice" placeholder="Price / Rent" required>
+    <textarea id="propertyDesc" placeholder="Description" rows="3" required></textarea>
+    <input type="file" id="propertyImages" accept="image/*" multiple>
+    <input type="text" id="propertyDocs" placeholder="Documentation Details" required>
+    <button type="submit">Save Property</button>
+  </form>
+</div>
+
+<!-- SELLER REVIEW -->
+<div class="screen" id="sellReview">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Review Your Property</h2>
+  <div id="reviewDetails"></div>
+  <button onclick="finishSelling()">Finish & Add to Listings</button>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="results">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2 id="resultsTitle">Available Properties</h2>
+  <div id="loadingIndicator" style="display:none;">
+    <div class="loading-spinner"></div>
+    <p>Loading properties...</p>
+  </div>
+  <div class="property-grid" id="resultsList"></div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- PROPERTY DETAILS -->
+<div class="screen" id="propertyDetails">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <div class="property-details-container" id="propertyDetailsContent"></div>
+</div>
+
+<!-- MY ADS -->
+<div class="screen" id="myAds">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>My ADS</h2>
+  <div class="property-grid" id="myAdsList">
+    <div class="empty-state">
+      <h3>No Ads Posted Yet</h3>
+      <p>You haven't posted any properties for sale or rent.</p>
+      <button onclick="showScreen('seller')" style="margin-top: 20px;">Post an Ad</button>
+    </div>
+  </div>
+</div>
+
+<!-- MY CART -->
+<div class="screen" id="myCart">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>My Cart</h2>
+  <div class="property-grid" id="myCartList">
+    <div class="empty-state">
+      <h3>Your Cart is Empty</h3>
+      <p>You haven't added any properties to your cart.</p>
+      <button onclick="showScreen('buyer')" style="margin-top: 20px;">Search Properties</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen" id="profile">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>My Profile</h2>
+
+  <div id="profileViewMode" style="display:none;">
+    <div class="profile-view-box">
+      <h3>Profile Information</h3>
+      <div class="profile-info-item"><strong>Name:</strong><span id="viewProfileName">-</span></div>
+      <div class="profile-info-item"><strong>Email:</strong><span id="viewProfileEmail">-</span></div>
+      <div class="profile-info-item"><strong>Date of Birth:</strong><span id="viewProfileDOB">-</span></div>
+      <div class="profile-info-item"><strong>Phone:</strong><span id="viewProfilePhone">-</span></div>
+      <div class="profile-info-item"><strong>Gender:</strong><span id="viewProfileGender">-</span></div>
+      <div class="profile-info-item"><strong>Address:</strong><span id="viewProfileAddress">-</span></div>
+      <div class="profile-info-item"><strong>Pincode:</strong><span id="viewProfilePincode">-</span></div>
+      <div class="profile-info-item"><strong>Landmark:</strong><span id="viewProfileLandmark">-</span></div>
+      <button class="profile-edit-btn" onclick="editProfile()">Edit Profile</button>
+    </div>
+  </div>
+
+  <div id="profileEditMode">
+    <div id="profileStepA">
+      <h3>Step A: Fill Details</h3>
+      <form id="profileFormA" onsubmit="event.preventDefault(); saveProfileA();">
+        <input type="file" id="profilePic" accept="image/*" onchange="autoSaveProfile()">
+        <input type="text" id="profileName" placeholder="Full Name" required onblur="autoSaveProfile()">
+        <input type="email" id="profileEmail" placeholder="Email ID" required onblur="autoSaveProfile()">
+        <input type="date" id="profileDOB" required onchange="autoSaveProfile()">
+        <input type="tel" id="profilePhone" placeholder="Phone Number" required onblur="autoSaveProfile()">
+        <select id="profileGender" required onchange="autoSaveProfile()">
+          <option value="">Select Gender</option>
+          <option>Male</option><option>Female</option><option>Other</option>
+        </select>
+        <button type="submit">Save & Continue</button>
+      </form>
+    </div>
+
+    <div id="profileStepB" style="display:none;">
+      <h3>Step B: Address</h3>
+      <button onclick="window.open('https://maps.google.com','_blank')">Add Location from Maps</button>
+      <input type="text" id="address" placeholder="Enter Address" required onblur="autoSaveProfile()">
+      <input type="text" id="pincode" placeholder="Pincode" required onblur="autoSaveProfile()">
+      <input type="text" id="landmark" placeholder="Landmark" required onblur="autoSaveProfile()">
+      <button onclick="saveAddress()">Save Address</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPORT -->
+<div class="screen" id="support">
+  <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2>Support</h2>
+  <p>Need help? Contact our support team:</p>
+  <div style="margin-top: 30px;">
+    <p><strong>Phone:</strong> +91 1234567890</p>
+    <p><strong>Email:</strong> support@landmark.com</p>
+    <p><strong>Hours:</strong> 9 AM - 6 PM (Mon-Sat)</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>About Us | Locations | Support | Contact</p>
+  <p>Disclaimer | Terms of Use | Privacy Policy | &copy; 2025 Landmark</p>
+  <p>Social Media: <a href="#">Facebook</a> | <a href="#">Instagram</a> | <a href="#">Twitter</a></p>
+</footer>
+<script>
+(function() {
+  'use strict';
+
+  const SITE_NAME = 'LandMark';
+  const SLIDESHOW_INTERVAL = 5000;
+  const RESULTS_PER_PAGE = 20;
+
+  let historyStack = [];
+  let sellerData = {};
+  let propertyList = [];
+  let currentPage = 1;
+  let totalResults = 0;
+  let currentSlideIndex = 0;
+  let slideshowTimer = null;
+  let currentSearchType = '';
+  let currentSearchLocation = '';
+  let currentBHK = '';
+  let myAds = [];
+  let myCart = [];
+
+  // Splash lock to ensure full-screen opening page
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('splash-lock');
+  });
+
+  window.onload = function() {
+    initializeSiteName();
+    loadProfileData();
+    loadMyAds();
+    loadMyCart();
+    showScreen('frontPage');
+    setTimeout(hideSplashAndEnter, 3000);
+  };
+
+  function hideSplashAndEnter() {
+    const splash = document.getElementById('frontPage');
+    if (splash) splash.style.display = 'none';
+    document.getElementById('mainHeader').style.display = 'flex';
+    document.body.classList.remove('splash-lock');
+    showScreen('home');
+    startSlideshow();
+  }
+
+  document.getElementById('frontPage').addEventListener('click', hideSplashAndEnter);
+
+  function initializeSiteName() {
+    document.getElementById('homepageTitle').textContent = SITE_NAME;
+    document.querySelector('.app-title').textContent = SITE_NAME;
+  }
+
+  // Seamless slideshow; every image shows after 5s with no extra gap between 5th->1st
+  function startSlideshow() {
+    const slides = document.querySelectorAll('#homepage-slideshow .slide');
+    if (slides.length === 0) return;
+
+    slideshowTimer = setInterval(() => {
+      slides[currentSlideIndex].classList.remove('active');
+      currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+      slides[currentSlideIndex].classList.add('active');
+    }, SLIDESHOW_INTERVAL);
+  }
+  function stopSlideshow() {
+    if (slideshowTimer) {
+      clearInterval(slideshowTimer);
+      slideshowTimer = null;
+    }
+  }
+
+  // Navigation
+  window.showScreen = function(id) {
+    let current = document.querySelector('.screen[style*="block"]');
+    if (current && current.id !== 'frontPage') { historyStack.push(current.id); }
+
+    document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+
+    if (id === 'myAds') displayMyAds();
+    if (id === 'myCart') displayMyCart();
+    if (id === 'profile') checkProfileData();
+  };
+
+  window.goBack = function() {
+    if (historyStack.length > 0) {
+      let prev = historyStack.pop();
+      document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+      document.getElementById(prev).style.display = 'block';
+    } else {
+      showScreen('home');
+    }
+  };
+
+  // Menu + profile popup
+  window.toggleMenu = function() {
+    const overlay = document.getElementById('menuOverlay');
+    const hamburger = document.querySelector('.hamburger');
+    overlay.classList.toggle('active');
+    hamburger.classList.toggle('active');
+  };
+  window.closeMenuAndShow = function(screenId) {
+    const overlay = document.getElementById('menuOverlay');
+    const hamburger = document.querySelector('.hamburger');
+    overlay.classList.remove('active');
+    hamburger.classList.remove('active');
+    showScreen(screenId);
+  };
+  document.getElementById('menuOverlay').addEventListener('click', function(e) {
+    if (e.target === this) toggleMenu();
+  });
+
+  window.toggleProfilePopup = function() {
+    const popup = document.getElementById('profilePopup');
+    popup.classList.toggle('active');
+    const profileData = JSON.parse(localStorage.getItem('landmarkProfileData') || '{}');
+    if (profileData.name) {
+      document.getElementById('profilePopupName').textContent = profileData.name;
+      document.getElementById('profilePopupAvatar').textContent = profileData.name.charAt(0).toUpperCase();
+      document.getElementById('profileIconText').textContent = profileData.name.charAt(0).toUpperCase();
+    }
+    if (profileData.email) {
+      document.getElementById('profilePopupEmail').textContent = profileData.email;
+    }
+  };
+  window.closeProfilePopupAndShow = function(screenId) {
+    const popup = document.getElementById('profilePopup');
+    popup.classList.remove('active');
+    showScreen(screenId);
+  };
+  document.addEventListener('click', function(e) {
+    const popup = document.getElementById('profilePopup');
+    const profileIcon = document.querySelector('.profile-icon');
+    if (popup && !popup.contains(e.target) && profileIcon && !profileIcon.contains(e.target)) {
+      popup.classList.remove('active');
+    }
+  });
+
+  // Profile autosave
+  window.autoSaveProfile = function() {
+    const profileData = {
+      name: document.getElementById('profileName')?.value || '',
+      email: document.getElementById('profileEmail')?.value || '',
+      dob: document.getElementById('profileDOB')?.value || '',
+      phone: document.getElementById('profilePhone')?.value || '',
+      gender: document.getElementById('profileGender')?.value || '',
+      address: document.getElementById('address')?.value || '',
+      pincode: document.getElementById('pincode')?.value || '',
+      landmark: document.getElementById('landmark')?.value || ''
+    };
+    localStorage.setItem('landmarkProfileData', JSON.stringify(profileData));
+  };
+
+  function loadProfileData() {
+    const savedData = localStorage.getItem('landmarkProfileData');
+    if (!savedData) return;
+    try {
+      const profileData = JSON.parse(savedData);
+      setTimeout(() => {
+        if (document.getElementById('profileName')) document.getElementById('profileName').value = profileData.name || '';
+        if (document.getElementById('profileEmail')) document.getElementById('profileEmail').value = profileData.email || '';
+        if (document.getElementById('profileDOB')) document.getElementById('profileDOB').value = profileData.dob || '';
+        if (document.getElementById('profilePhone')) document.getElementById('profilePhone').value = profileData.phone || '';
+        if (document.getElementById('profileGender')) document.getElementById('profileGender').value = profileData.gender || '';
+        if (document.getElementById('address')) document.getElementById('address').value = profileData.address || '';
+        if (document.getElementById('pincode')) document.getElementById('pincode').value = profileData.pincode || '';
+        if (document.getElementById('landmark')) document.getElementById('landmark').value = profileData.landmark || '';
+      }, 300);
+    } catch (e) {}
+  }
+
+  function checkProfileData() {
+    const savedData = localStorage.getItem('landmarkProfileData');
+    if (!savedData) return showProfileEdit();
+    try {
+      const profileData = JSON.parse(savedData);
+      if (profileData.name && profileData.email) showProfileView(profileData);
+      else showProfileEdit();
+    } catch (e) { showProfileEdit(); }
+  }
+  function showProfileView(data) {
+    document.getElementById('profileViewMode').style.display = 'block';
+    document.getElementById('profileEditMode').style.display = 'none';
+    document.getElementById('viewProfileName').textContent = data.name || '-';
+    document.getElementById('viewProfileEmail').textContent = data.email || '-';
+    document.getElementById('viewProfileDOB').textContent = data.dob || '-';
+    document.getElementById('viewProfilePhone').textContent = data.phone || '-';
+    document.getElementById('viewProfileGender').textContent = data.gender || '-';
+    document.getElementById('viewProfileAddress').textContent = data.address || '-';
+    document.getElementById('viewProfilePincode').textContent = data.pincode || '-';
+    document.getElementById('viewProfileLandmark').textContent = data.landmark || '-';
+  }
+  function showProfileEdit() {
+    document.getElementById('profileViewMode').style.display = 'none';
+    document.getElementById('profileEditMode').style.display = 'block';
+    loadProfileData();
+  }
+  window.editProfile = function() { showProfileEdit(); };
+  window.saveProfileA = function() {
+    autoSaveProfile();
+    alert("Profile details saved successfully!");
+    document.getElementById('profileStepA').style.display = 'none';
+    document.getElementById('profileStepB').style.display = 'block';
+  };
+  window.saveAddress = function() {
+    autoSaveProfile();
+    alert("Address saved successfully!");
+    const profileData = JSON.parse(localStorage.getItem('landmarkProfileData') || '{}');
+    showProfileView(profileData);
+  };
+
+  // Seller
+  window.showReview = function() {
+    sellerData.name = document.getElementById('sellerName').value;
+    sellerData.email = document.getElementById('sellerEmail').value;
+    sellerData.phone = document.getElementById('sellerPhone').value;
+    sellerData.type = document.getElementById('propertyTypeSell').value;
+    sellerData.location = document.getElementById('propertyLocation').value;
+    sellerData.price = document.getElementById('propertyPrice').value;
+    sellerData.desc = document.getElementById('propertyDesc').value;
+    sellerData.docs = document.getElementById('propertyDocs').value;
+    const files = document.getElementById('propertyImages').files;
+    sellerData.images = [];
+    for (let i = 0; i < files.length; i++) { sellerData.images.push(URL.createObjectURL(files[i])); }
+
+    let reviewDiv = document.getElementById('reviewDetails');
+    reviewDiv.innerHTML = `
+      <div style="background: var(--light-green); padding: 20px; border-radius: 10px; text-align: left; max-width: 600px; margin: 0 auto;">
+        <h3>Property Details</h3>
+        <p><strong>Name:</strong> ${sellerData.name}</p>
+        <p><strong>Email:</strong> ${sellerData.email}</p>
+        <p><strong>Phone:</strong> ${sellerData.phone}</p>
+        <p><strong>Type:</strong> ${sellerData.type}</p>
+        <p><strong>Location:</strong> ${sellerData.location}</p>
+        <p><strong>Price:</strong> ${sellerData.price}</p>
+        <p><strong>Description:</strong> ${sellerData.desc}</p>
+        <p><strong>Documentation:</strong> ${sellerData.docs}</p>
+        ${sellerData.images.length > 0 ? `
+          <div style="margin-top: 15px;">
+            <strong>Images:</strong><br>
+            ${sellerData.images.map(img => `<img src="${img}" style="width:100px;height:80px;object-fit:cover;margin:5px;border-radius:5px;">`).join('')}
+          </div>` : ``}
+      </div>`;
+    showScreen('sellReview');
+  };
+  window.finishSelling = function() {
+    myAds.push({ ...sellerData, id: Date.now() });
+    localStorage.setItem('landmarkMyAds', JSON.stringify(myAds));
+    alert("Property successfully added!");
+    document.getElementById('sellerForm').reset();
+    showScreen('home');
+  };
+
+  function loadMyAds() {
+    const savedAds = localStorage.getItem('landmarkMyAds');
+    if (!savedAds) return;
+    try { myAds = JSON.parse(savedAds); } catch (e) { myAds = []; }
+  }
+  function displayMyAds() {
+    const adsList = document.getElementById('myAdsList');
+    if (!myAds || myAds.length === 0) {
+      adsList.innerHTML = `
+        <div class="empty-state">
+          <h3>No Ads Posted Yet</h3>
+          <p>You haven't posted any properties for sale or rent.</p>
+          <button onclick="showScreen('seller')" style="margin-top: 20px;">Post an Ad</button>
+        </div>`;
+      return;
+    }
+    adsList.innerHTML = '';
+    myAds.forEach(ad => {
+      const imgSrc = ad.images && ad.images.length > 0 ? ad.images[0] : 'https://via.placeholder.com/400x180?text=Property';
+      adsList.innerHTML += `
+        <div class="property-card">
+          <img src="${imgSrc}" alt="${ad.type}">
+          <div class="info">
+            <h3>${ad.type.charAt(0).toUpperCase() + ad.type.slice(1)} Property</h3>
+            <p><strong>Price:</strong> ${ad.price}</p>
+            <p><strong>Location:</strong> ${ad.location}</p>
+            <p>${ad.desc}</p>
+          </div>
+          <div class="actions">
+            <button onclick="deleteAd(${ad.id})">Delete</button>
+            <button onclick="viewAdDetails(${ad.id})">View Details</button>
+          </div>
+        </div>`;
+    });
+  }
+  window.deleteAd = function(adId) {
+    if (confirm('Are you sure you want to delete this ad?')) {
+      myAds = myAds.filter(ad => ad.id !== adId);
+      localStorage.setItem('landmarkMyAds', JSON.stringify(myAds));
+      displayMyAds();
+    }
+  };
+  window.viewAdDetails = function(adId) {
+    const ad = myAds.find(a => a.id === adId);
+    if (ad) alert(`Ad Details:\n\nType: ${ad.type}\nLocation: ${ad.location}\nPrice: ${ad.price}\nDescription: ${ad.desc}`);
+  };
+
+  function loadMyCart() {
+    const savedCart = localStorage.getItem('landmarkMyCart');
+    if (!savedCart) return;
+    try { myCart = JSON.parse(savedCart); } catch (e) { myCart = []; }
+  }
+  function displayMyCart() {
+    const cartList = document.getElementById('myCartList');
+    if (!myCart || myCart.length === 0) {
+      cartList.innerHTML = `
+        <div class="empty-state">
+          <h3>Your Cart is Empty</h3>
+          <p>You haven't added any properties to your cart.</p>
+          <button onclick="showScreen('buyer')" style="margin-top: 20px;">Search Properties</button>
+        </div>`;
+      return;
+    }
+    cartList.innerHTML = '';
+    myCart.forEach((item, index) => {
+      const soldOut = Math.random() > 0.8;
+      cartList.innerHTML += `
+        <div class="property-card">
+          ${soldOut ? '<div class="sold-out-label">Sold Out</div>' : ''}
+          <img src="${item.thumbnail}" alt="${item.name}">
+          <div class="info">
+            <h3>${item.name}</h3>
+            <p>${item.size || ''}</p>
+            <p><strong>Price:</strong> ${item.price}</p>
+            <p><strong>Location:</strong> ${item.location}</p>
+          </div>
+          <div class="actions">
+            <button onclick="removeFromCart(${index})">Remove</button>
+            <button onclick="viewCartItemDetails(${index})" ${soldOut ? 'disabled' : ''}>View Details</button>
+          </div>
+        </div>`;
+    });
+  }
+  window.removeFromCart = function(index) {
+    myCart.splice(index, 1);
+    localStorage.setItem('landmarkMyCart', JSON.stringify(myCart));
+    displayMyCart();
+  };
+  window.viewCartItemDetails = function(index) {
+    const item = myCart[index];
+    if (item) showPropertyDetails(item);
+  };
+  window.addToCart = function(property) {
+    myCart.push(property);
+    localStorage.setItem('landmarkMyCart', JSON.stringify(myCart));
+    alert('Property added to cart!');
+  };
+  // Search flow with BHK for houses
+  window.handleSearch = function() {
+    const type = document.getElementById('propertySearchType')?.value;
+    const location = document.getElementById('searchLocation')?.value;
+    if (!type || !location) { alert('Please select property type and enter location'); return; }
+    currentSearchType = type; currentSearchLocation = location;
+
+    if (type === 'house') {
+      document.getElementById('bhkLocationName').textContent = location;
+      showScreen('bhkSelection');
+    } else {
+      currentBHK = '';
+      currentPage = 1;
+      searchProperties(type, location, '');
+    }
+  };
+  window.searchWithBHK = function(bhk) {
+    currentBHK = bhk;
+    currentPage = 1;
+    searchProperties(currentSearchType, currentSearchLocation, bhk);
+  };
+
+  function searchProperties(type, location, bhk) {
+    const resultsList = document.getElementById('resultsList');
+    const resultsTitle = document.getElementById('resultsTitle');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    let titleText = `Available ${type.charAt(0).toUpperCase() + type.slice(1)}s in ${location}`;
+    if (bhk && bhk !== 'Any') titleText += ` (${bhk})`;
+    resultsTitle.textContent = titleText;
+
+    resultsList.innerHTML = '';
+    loadingIndicator.style.display = 'block';
+    showScreen('results');
+
+    setTimeout(() => {
+      generateSampleProperties(type, location, bhk);
+      displayResults(currentPage);
+      loadingIndicator.style.display = 'none';
+    }, 800);
+  }
+
+  function generateSampleProperties(type, location, bhk) {
+    propertyList = [];
+    for (let i = 1; i <= 120; i++) {
+      const property = {
+        type: type,
+        name: `${type.charAt(0).toUpperCase() + type.slice(1)} Property ${i}`,
+        location: location,
+        price: `₹${Math.floor(Math.random() * 80 + 20)} Lakhs`,
+        desc: `Beautiful ${type} in prime location with modern amenities.`,
+        thumbnail: getPropertyImage(type, i),
+        distanceFromTown: `${(Math.random() * 10 + 1).toFixed(1)} km from city center`,
+        nearbyPlaces: [
+          `School - ${(Math.random() * 2 + 0.5).toFixed(1)} km`,
+          `Hospital - ${(Math.random() * 3 + 0.5).toFixed(1)} km`,
+          `Market - ${(Math.random() * 1.5 + 0.2).toFixed(1)} km`,
+          `Bus Stop - ${(Math.random() * 0.8 + 0.1).toFixed(1)} km`,
+          `Temple - ${(Math.random() * 1 + 0.2).toFixed(1)} km`
+        ]
+      };
+      if (type === 'house') {
+        const bhkType = bhk && bhk !== 'Any' ? bhk : `${Math.floor(Math.random() * 4 + 1)}BHK`;
+        property.size = `${bhkType} | ${Math.floor(Math.random() * 3000 + 500)} sqft`;
+        property.bhk = bhkType;
+      } else if (type === 'land') {
+        property.size = `${Math.floor(Math.random() * 50 + 5)} cents`;
+      } else {
+        property.size = `${Math.floor(Math.random() * 2000 + 300)} sqft`;
+      }
+      propertyList.push(property);
+    }
+    totalResults = propertyList.length;
+  }
+
+  // Image sources per requirement
+  function getPropertyImage(type, index) {
+    if (type === 'house') {
+      // Pexels house search (using public CDN-styled sample IDs for demo)
+      return `https://images.pexels.com/photos/${1000000 + index}/pexels-photo-${1000000 + index}.jpeg?auto=compress&cs=tinysrgb&w=400`;
+    } else if (type === 'land') {
+      // Different images for each result (vecteezy-like topic represented by a list of land images)
+      const landImages = [
+        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400',
+        'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400',
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
+        'https://images.unsplash.com/photo-1597223557154-721c1cecc4b0?w=400',
+        'https://images.unsplash.com/photo-1592595896551-12b371d546d5?w=400',
+        'https://images.unsplash.com/photo-1531928351158-2f736078e0a1?w=400',
+        'https://images.unsplash.com/photo-1559479083-9c3a2d5773cc?w=400',
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400',
+        'https://images.unsplash.com/photo-1584159515884-98b98eb7f737?w=400',
+        'https://images.unsplash.com/photo-1477414348463-c0eb7f1359b6?w=400'
+      ];
+      return landImages[index % landImages.length];
+    } else {
+      return `https://source.unsplash.com/400x300/?${type},property,${index}`;
+    }
+  }
+
+  function displayResults(page) {
+    const startIndex = (page - 1) * RESULTS_PER_PAGE;
+    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, propertyList.length);
+    const resultsList = document.getElementById('resultsList');
+
+    resultsList.innerHTML = '';
+    if (propertyList.length === 0) {
+      resultsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; font-size: 1.2em;">No properties found matching your criteria.</p>';
+      return;
+    }
+
+    for (let i = startIndex; i < endIndex; i++) {
+      const p = propertyList[i];
+      resultsList.innerHTML += `
+        <div class="property-card">
+          <img src="${p.thumbnail}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x180?text=${p.type}+${i+1}'">
+          <div class="info">
+            <h3>${p.name}</h3>
+            <p>${p.size || ''}</p>
+            <p><strong>Price:</strong> ${p.price}</p>
+            <p><strong>Location:</strong> ${p.location}</p>
+            <p><strong>Distance:</strong> ${p.distanceFromTown || ''}</p>
+            <p>${p.desc || ''}</p>
+          </div>
+          <div class="actions">
+            <button onclick='showPropertyDetails(${JSON.stringify(p).replace(/'/g, "&#39;")})'>View Details</button>
+            <button onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Add to Cart</button>
+          </div>
+        </div>`;
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    const totalPages = Math.ceil(propertyList.length / RESULTS_PER_PAGE);
+    pagination.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    if (currentPage > 1) pagination.innerHTML += `<button onclick="changePage(${currentPage - 1})">← Previous</button>`;
+
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    if (endPage - startPage < maxButtons - 1) startPage = Math.max(1, endPage - maxButtons + 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const activeClass = i === currentPage ? 'style="background: var(--dark-green);"' : '';
+      pagination.innerHTML += `<button ${activeClass} onclick="changePage(${i})">${i}</button>`;
+    }
+    if (currentPage < totalPages) pagination.innerHTML += `<button onclick="changePage(${currentPage + 1})">Next →</button>`;
+
+    pagination.innerHTML += `<p style="width:100%; text-align:center; margin-top:15px;">Showing ${((currentPage-1)*RESULTS_PER_PAGE)+1}-${Math.min(currentPage*RESULTS_PER_PAGE, totalResults)} of ${totalResults} results</p>`;
+  }
+
+  window.changePage = function(page) {
+    currentPage = page;
+    displayResults(page);
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Property details page (enquiry shows full details with distances and nearby places)
+  window.showPropertyDetails = function(property) {
+    const detailsContent = document.getElementById('propertyDetailsContent');
+    detailsContent.innerHTML = `
+      <h2>${property.name}</h2>
+      <img src="${property.thumbnail}" alt="${property.name}" class="property-details-image" onerror="this.src='https://via.placeholder.com/900x400?text=Property+Image'">
+
+      <div class="property-info-section">
+        <h3>Property Information</h3>
+        <p><strong>Type:</strong> ${property.type.charAt(0).toUpperCase() + property.type.slice(1)}</p>
+        <p><strong>Size:</strong> ${property.size || 'N/A'}</p>
+        <p><strong>Price:</strong> ${property.price}</p>
+        <p><strong>Location:</strong> ${property.location}</p>
+        <p><strong>Distance from Town Center:</strong> ${property.distanceFromTown || 'N/A'}</p>
+      </div>
+
+      <div class="property-info-section">
+        <h3>Description</h3>
+        <p>${property.desc}</p>
+      </div>
+
+      <div class="property-info-section">
+        <h3>Nearby Places</h3>
+        <div class="nearby-places">
+          <ul>
+            ${property.nearbyPlaces ? property.nearbyPlaces.map(place => `<li>${place}</li>`).join('') : '<li>No nearby places information available</li>'}
+          </ul>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top: 30px;">
+        <button onclick="alert('Enquiry sent for ${property.name}')">Enquire Now</button>
+        <button onclick='addToCart(${JSON.stringify(property).replace(/'/g, "&#39;")})'>Add to Cart</button>
+      </div>`;
+    showScreen('propertyDetails');
+  };
+
+  // Ripple effect
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('button').forEach(button => {
+      button.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple');
+        this.appendChild(ripple);
+        setTimeout(() => { ripple.remove(); }, 600);
+      });
+    });
+  });
+
+  window.addEventListener('beforeunload', function() { stopSlideshow(); });
+})();
+</script>
+
+</body>
+</html>
